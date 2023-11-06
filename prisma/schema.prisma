@@ -1,0 +1,179 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model SystemUser {
+  id                       Int      @id @default(autoincrement())
+  system_user_code         String   @unique
+  system_user_email        String   @unique
+  system_user_password     String
+  system_user_display_name String?
+  role_id                  Int
+  role                     UserRole @relation(fields: [role_id], references: [id])
+  status                   Boolean  @default(true)
+  avatar                   String?
+
+  created_at DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("system_users")
+}
+
+model UserRole {
+  id        Int     @id @default(autoincrement())
+  role_code String  @unique
+  role_name String
+  status    Boolean @default(true)
+
+  created_at DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  User       SystemUser[]
+
+  @@map("user_roles")
+}
+
+model Customer {
+  id            Int     @id @default(autoincrement())
+  email         String  @unique
+  password      String
+  display_name  String?
+  customer_name String?
+  address       String?
+  phone_number  String? @unique
+  status        Boolean @default(true)
+  avatar        String?
+
+  created_at    DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  // Product    Product[]
+  Cart          Cart[]
+  InvoiceHeader InvoiceHeader[]
+
+  @@map("customers")
+}
+
+model Image {
+  id         Int     @id @default(autoincrement())
+  url        String
+  product_id Int
+  product    Product @relation(fields: [product_id], references: [id])
+
+  @@map("images")
+}
+
+model Product {
+  id         Int      @id @default(autoincrement())
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  status     Boolean  @default(true)
+
+  // customer_id Int
+  // customer    Customer @relation(fields: [customer_id], references: [id])
+
+  category_id Int
+  category    Category @relation(fields: [category_id], references: [id])
+
+  product_code         String          @unique
+  product_name         String
+  product_price        String?
+  product_decscription String?
+  product_information  String?
+  product_tag          String?
+  image                Image[]
+  CartItem             CartItem[]
+  InvoiceDetail        InvoiceDetail[]
+
+  @@map("products")
+}
+
+model Category {
+  id         Int      @id @default(autoincrement())
+  created_at DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  status     Boolean  @default(true)
+
+  category_name String
+  category_code String    @unique
+  image         String?
+  Product       Product[]
+
+  @@map("categories")
+}
+
+model Promotion {
+  id              Int     @id @default(autoincrement())
+  promotion_code  String
+  promotion_value Int
+  status          Boolean @default(true)
+}
+
+model Cart {
+  id             Int        @id @default(autoincrement())
+  customer_id    Int
+  customer       Customer   @relation(fields: [customer_id], references: [id])
+  total_quantity Int        @default(0)
+  promotion_id   Int[]      @default([])
+  total_cost     Int        @default(0)
+  cart_item      CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id         Int     @id @default(autoincrement())
+  product_id Int
+  product    Product @relation(fields: [product_id], references: [id])
+  quantity   Int
+  cart_id    Int
+  cart       Cart    @relation(fields: [cart_id], references: [id])
+
+  @@map("cart_items")
+}
+
+model InvoiceHeader {
+  id                             Int             @id @default(autoincrement())
+  customer_id                    Int?
+  customer                       Customer?       @relation(fields: [customer_id], references: [id])
+  invoice_header_value           Int
+  invoice_header_address         String
+  invoice_header_phone           String
+  invoice_header_email           String
+  invoice_header_customer_name   String
+  invoice_header_receive_name    String
+  invoice_header_ship_value      Int
+  invoice_header_payment_status  Boolean         @default(false)
+  invoice_header_shipping_status Boolean         @default(false)
+  created_at                     DateTime        @default(now())
+  updatedAt                      DateTime        @updatedAt
+  InvoiceDetail                  InvoiceDetail[]
+
+  @@map("invoice_header")
+}
+
+model InvoiceDetail {
+  id                Int           @id @default(autoincrement())
+  invoice_header_id Int
+  InvoiceHeader     InvoiceHeader @relation(fields: [invoice_header_id], references: [id])
+  product_id        Int
+  Product           Product       @relation(fields: [product_id], references: [id])
+  quantity          Int
+  created_at        DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@map("invoice_detail")
+}
+
+model Blog {
+  id           Int    @id @default(autoincrement())
+  blog_title   String
+  blog_content String
+  blog_theme   String
+}
